@@ -70,7 +70,7 @@ Background.prototype.draw = function (ctx) {
 };
 
 function Unicorn(game) {
-    this.animation = new Animation(ASSET_MANAGER.getAsset("./img/RobotUnicorn.png"), 0, 0, 206, 110, 0.02, 30, true, true);
+    this.animation = new Animation(ASSET_MANAGER.getAsset("./img/RobotUnicorn.png"), 0, 0, 206, 110, 0.02, 30, true, false);
     this.jumpAnimation = new Animation(ASSET_MANAGER.getAsset("./img/RobotUnicorn.png"), 618, 334, 174, 138, 0.02, 40, false, true);
     this.jumping = false;
     this.radius = 100;
@@ -110,32 +110,47 @@ Unicorn.prototype.draw = function (ctx) {
     }
     Entity.prototype.draw.call(this);
 };
-
 function Snake(game) {
     this.animation = new Animation(ASSET_MANAGER.getAsset("./img/snake.png"), 10, 143, 35.5, 49, 0.2, 6, true, false);
     this.boxAnimation = new Animation(ASSET_MANAGER.getAsset("./img/snake.png"), 65, 1763, 43, 67, 0.2, 8, true, false);
     this.box = false;
     this.radius = 100;
-    this.ground = 400;
-    Entity.call(this, game, 0, 450);
+    this.ground = 451;
+    Entity.call(this, game, 0, this.ground);
 }
 Snake.prototype = new Entity();
 Snake.prototype.constructor = Snake;
 
 Snake.prototype.update = function() {
-    //this.x += 1;
-
-    if (this.game.space) {
-        this.box ^= true;
-        console.log(this.box);
-    }
-    if (this.box) {
-        if (this.boxAnimation.isDone()) {
-            this.boxAnimation.elapsedTime = 0;
-            this.box ^= true;
-        }
+    if (Key.isDown(Key.LEFT)) {
+        //this.animation = new Animation(ASSET_MANAGER.getAsset("./img/snake.png"), 10, 143, 35.5, 49, 0.2, 6, true, true);
+        this.moveLeft();
         Entity.prototype.draw.call(this);
     }
+    if (Key.isDown(Key.RIGHT)) {
+        //this.animation = new Animation(ASSET_MANAGER.getAsset("./img/snake.png"), 10, 143, 35.5, 49, 0.2, 6, true, false);
+        this.moveRight();
+        Entity.prototype.draw.call(this);
+    }
+    if (Key.isDown(Key.DOWN)) {
+        this.moveDown();
+        Entity.prototype.draw.call(this);
+    }
+
+
+    //this.x += 1;
+
+    //if (this.game.space) {
+    //    this.box ^= true;
+    //    console.log(this.box);
+    //}
+    //if (this.box) {
+    //    if (this.boxAnimation.isDone()) {
+    //        this.boxAnimation.elapsedTime = 0;
+    //        this.box ^= true;
+    //    }
+    //    Entity.prototype.draw.call(this);
+    //}
     //if (this.game.space) this.jumping = true;
     //if (this.jumping) {
     //    if (this.jumpAnimation.isDone()) {
@@ -152,12 +167,54 @@ Snake.prototype.update = function() {
     //    this.y = this.ground - height;
     //}
     //Entity.prototype.draw.call(this);
+
 };
+
 
 Snake.prototype.draw = function(ctx) {
     this.animation.drawFrame(this.game.clockTick, ctx, this.x, this.y);
     Entity.prototype.draw.call(this);
 };
+
+Snake.prototype.moveLeft = function() {
+    this.x -= 2;
+};
+
+Snake.prototype.moveRight = function() {
+    this.x += 2;
+};
+
+Snake.prototype.moveDown = function() {
+    this.animation = new Animation(ASSET_MANAGER.getAsset("./img/snake.png"), 65, 1763, 46, 72, 0.2, 8, true, false);
+    this.ground += 23;
+
+};
+//
+//Snake.prototype.moveLeft = function() {
+//    this.x -= 1;
+//};
+
+var Key = {
+    _pressed: {},
+
+    LEFT: 37,
+    UP: 38,
+    RIGHT: 39,
+    DOWN: 40,
+
+    isDown: function(keyCode) {
+        return this._pressed[keyCode];
+    },
+    onKeyDown: function(event) {
+        this._pressed[event.keyCode] = true;
+    },
+    onKeyUp: function(event) {
+        delete this._pressed[event.keyCode];
+    }
+};
+
+window.addEventListener('keyup', function(event) { Key.onKeyUp(event); }, false);
+window.addEventListener('keydown', function(event) { Key.onKeyDown(event); }, false);
 
 // the "main" code begins here
 
