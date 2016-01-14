@@ -13,7 +13,7 @@ function Animation(spriteSheet, startX, startY, frameWidth, frameHeight, frameDu
 }
 
 Animation.prototype.drawFrame = function (tick, ctx, x, y, scaleBy) {
-    var scaleBy = scaleBy || 1;
+    var scaleBy = scaleBy || 1; //sets scaleBy to 1 if it is 0 or null ("falsey")
     this.elapsedTime += tick;
     if (this.loop) {
         if (this.isDone()) {
@@ -53,6 +53,7 @@ Animation.prototype.isDone = function () {
 };
 
 function Background(game) {
+    //first param tells the entity to attach this call to the background object
     Entity.call(this, game, 0, 400);
     this.radius = 200;
 }
@@ -185,8 +186,8 @@ Snake.prototype.moveRight = function() {
 };
 
 Snake.prototype.moveDown = function() {
-    this.animation = new Animation(ASSET_MANAGER.getAsset("./img/snake.png"), 65, 1763, 46, 72, 0.2, 8, true, false);
-    this.ground += 23;
+    this.animation = new Animation(ASSET_MANAGER.getAsset("./img/snake.png"), 65, 1763, 46, 64, 0.2, 8, true, false);
+    this.ground -= 23;
 
 };
 //
