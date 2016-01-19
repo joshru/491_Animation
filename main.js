@@ -112,30 +112,76 @@ Unicorn.prototype.draw = function (ctx) {
     Entity.prototype.draw.call(this);
 };
 function Snake(game) {
-    this.animation = new Animation(ASSET_MANAGER.getAsset("./img/snake.png"), 10, 143, 35.5, 49, 0.2, 6, true, false);
-    this.boxAnimation = new Animation(ASSET_MANAGER.getAsset("./img/snake.png"), 65, 1763, 43, 67, 0.2, 8, true, false);
-    this.box = false;
+    this.game = game;
+    //store all our animations in Snake so we don't have to make new ones all the time
+    this.animations = {};
+    this.animations.idle = new Animation(ASSET_MANAGER.getAsset("./img/snake.png"), 18, 81, 32, 52, 0.2, 1, true, false);
+    this.animations.runRight = new Animation(ASSET_MANAGER.getAsset("./img/snake.png"), 10, 143, 35.5, 49, 0.2, 6, true, false);
+    this.animations.runLeft = new Animation(ASSET_MANAGER.getAsset("./img/snake_rev.png"), 331.5, 145, 35.5, 49, 0.2, 6, true, true);
+    this.animations.enterBox = new Animation(ASSET_MANAGER.getAsset("./img/snake.png"), 65, 1763, 43, 67, 0.2, 8, false, false);
+    this.animations.inBoxIdle = new Animation(ASSET_MANAGER.getAsset("./img/snake.png"), 388, 1801, 41, 28, 0.2, 1, true, false);
+    this.animations.boxRunLeft = new Animation(ASSET_MANAGER.getAsset("./img/snake_rev.png"), 137, 1925, 42, 46, 0.2, 6, true, true);
+    this.animations.boxRunRight = new Animation(ASSET_MANAGER.getAsset("./img/snake.png"), 167, 1920, 42, 46, 0.2, 6, true, false);
+    this.animation = this.animations.idle;
+    //this.boxAnimation =
+    this.idle = true;
+    this.enteringBox = false;
+    this.exitingBox = false;
+    this.inBox = false;
+    this.movingLeft = false;
+    this.movingRight = false;
     this.radius = 100;
-    this.ground = 451;
+    this.ground = 448;
     Entity.call(this, game, 0, this.ground);
 }
 Snake.prototype = new Entity();
 Snake.prototype.constructor = Snake;
 
 Snake.prototype.update = function() {
+    console.log("idle: " + this.idle + " | move left: " + this.movingLeft + " | move right: " + this.movingRight + " | entering box: " + this.enteringBox + " | in box: " + this.inBox + " | exiting box: " + this.exitingBox);
     if (Key.isDown(Key.LEFT)) {
-        //this.animation = new Animation(ASSET_MANAGER.getAsset("./img/snake.png"), 10, 143, 35.5, 49, 0.2, 6, true, true);
+        if (!this.movingLeft) {
+            this.idle ^= true;
+            this.movingLeft = true;
+            this.movingRight = false;
+            if (!this.inBox) this.animation = this.animations.runLeft;
+            if (this.inBox) this.animation = this.animations.boxRunLeft;
+
+            //this.ground = 451;
+        }
         this.moveLeft();
         Entity.prototype.draw.call(this);
-    }
-    if (Key.isDown(Key.RIGHT)) {
-        //this.animation = new Animation(ASSET_MANAGER.getAsset("./img/snake.png"), 10, 143, 35.5, 49, 0.2, 6, true, false);
+    } else if (Key.isDown(Key.RIGHT)) {
+        if (!this.movingRight) {
+            this.idle ^= true;
+            this.movingRight = true;
+            this.movingLeft = false;
+            if (!this.inBox) this.animation = this.animations.runRight;
+            if (this.inBox) this.animation = this.animations.boxRunRight;
+            this.ground = 451;
+        }
         this.moveRight();
-        Entity.prototype.draw.call(this);
-    }
-    if (Key.isDown(Key.DOWN)) {
-        this.moveDown();
-        Entity.prototype.draw.call(this);
+        //Entity.prototype.draw.call(this, this.ground);
+    } else if (Key.isDown(Key.DOWN)) {
+        if (!this.inBox) {
+            //this.animation = this.animations.enterBox;
+            this.inBox = true;
+            this.animation = this.animations.inBoxIdle;
+            //Entity.prototype.draw.call(this);
+            //Entity.prototype.draw.call(this);
+        } else {
+            this.inBox = false;
+            this.animation = this.animations.idle;
+            //Entity.prototype.draw.call(this);
+        }
+
+    } else {
+        this.idle = true;
+        this.movingLeft = false;
+        this.movingRight = false;
+        this.ground = 448;
+        if (!this.inBox) this.animation = this.animations.idle;
+        if (this.inBox) this.animation = this.animations.inBoxIdle;
     }
 
 
@@ -167,7 +213,7 @@ Snake.prototype.update = function() {
     //    var height = totalHeight * (-4 * (jumpDistance * jumpDistance - jumpDistance));
     //    this.y = this.ground - height;
     //}
-    //Entity.prototype.draw.call(this);
+    Entity.prototype.draw.call(this);
 
 };
 
@@ -178,6 +224,7 @@ Snake.prototype.draw = function(ctx) {
 };
 
 Snake.prototype.moveLeft = function() {
+
     this.x -= 2;
 };
 
@@ -186,8 +233,8 @@ Snake.prototype.moveRight = function() {
 };
 
 Snake.prototype.moveDown = function() {
-    this.animation = new Animation(ASSET_MANAGER.getAsset("./img/snake.png"), 65, 1763, 46, 64, 0.2, 8, true, false);
-    this.ground -= 23;
+    this.animation = this.animations.enterBox;
+    //this.ground -= 23;
 
 };
 //
@@ -222,6 +269,7 @@ window.addEventListener('keydown', function(event) { Key.onKeyDown(event); }, fa
 var ASSET_MANAGER = new AssetManager();
 
 ASSET_MANAGER.queueDownload("./img/snake.png");
+ASSET_MANAGER.queueDownload("./img/snake_rev.png");
 
 ASSET_MANAGER.downloadAll(function () {
     console.log("starting up da sheild");
