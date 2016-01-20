@@ -1,10 +1,11 @@
-function Animation(spriteSheet, startX, startY, frameWidth, frameHeight, frameDuration, frames, loop, reverse) {
+function Animation(spriteSheet, startX, startY, frameWidth, frameHeight, drawY, frameDuration, frames, loop, reverse) {
     this.spriteSheet = spriteSheet;
     this.startX = startX;
     this.startY = startY;
     this.frameWidth = frameWidth;
-    this.frameDuration = frameDuration;
     this.frameHeight = frameHeight;
+    this.drawY = drawY;
+    this.frameDuration = frameDuration;
     this.frames = frames;
     this.totalTime = frameDuration * frames;
     this.elapsedTime = 0;
@@ -42,6 +43,7 @@ Animation.prototype.drawFrame = function (tick, ctx, x, y, scaleBy) {
                   locX, locY,
                   this.frameWidth * scaleBy,
                   this.frameHeight * scaleBy);
+    if (this.isDone()) this.elapsedTime = 0;
 };
 
 Animation.prototype.currentFrame = function () {
@@ -115,13 +117,15 @@ function Snake(game) {
     this.game = game;
     //store all our animations in Snake so we don't have to make new ones all the time
     this.animations = {};
-    this.animations.idle = new Animation(ASSET_MANAGER.getAsset("./img/snake.png"), 18, 81, 32, 52, 0.2, 1, true, false);
-    this.animations.runRight = new Animation(ASSET_MANAGER.getAsset("./img/snake.png"), 10, 143, 35.5, 49, 0.2, 6, true, false);
-    this.animations.runLeft = new Animation(ASSET_MANAGER.getAsset("./img/snake_rev.png"), 331.5, 145, 35.5, 49, 0.2, 6, true, true);
-    this.animations.enterBox = new Animation(ASSET_MANAGER.getAsset("./img/snake.png"), 65, 1763, 43, 67, 0.2, 8, false, false);
-    this.animations.inBoxIdle = new Animation(ASSET_MANAGER.getAsset("./img/snake.png"), 388, 1801, 41, 28, 0.2, 1, true, false);
-    this.animations.boxRunLeft = new Animation(ASSET_MANAGER.getAsset("./img/snake_rev.png"), 137, 1925, 42, 46, 0.2, 6, true, true);
-    this.animations.boxRunRight = new Animation(ASSET_MANAGER.getAsset("./img/snake.png"), 167, 1920, 42, 46, 0.2, 6, true, false);
+    //                                                           sprite sheet path            X      Y     W     H     D    Dur  #  loop   reverse
+    this.animations.idle = new Animation(ASSET_MANAGER.getAsset("./img/snake.png"),           18,    81,   32,   52,   448, 0.1, 1, true,  false);
+    this.animations.runRight = new Animation(ASSET_MANAGER.getAsset("./img/snake.png"),       10,    143,  35.5, 49,   451, 0.1, 6, true,  false);
+    this.animations.runLeft = new Animation(ASSET_MANAGER.getAsset("./img/snake_rev.png"),    331.5, 143,  35.5, 49,   451, 0.1, 6, true,  true);
+    this.animations.enterBox = new Animation(ASSET_MANAGER.getAsset("./img/snake.png"),       65,    1763, 43,   67,   448, 0.1, 8, false, false);
+    this.animations.exitBox = new Animation(ASSET_MANAGER.getAsset("./img/snake.png"),        22,    1859, 42,   57,   448, 0.1, 6, false, false);
+    this.animations.inBoxIdle = new Animation(ASSET_MANAGER.getAsset("./img/snake.png"),      388,   1801, 41,   27.5, 473, 0.1, 1, true,  false);
+    this.animations.boxRunLeft = new Animation(ASSET_MANAGER.getAsset("./img/snake_rev.png"), 137,   1920, 42,   46,   454, 0.1, 6, true,  true);
+    this.animations.boxRunRight = new Animation(ASSET_MANAGER.getAsset("./img/snake.png"),    167,   1920, 42,   46,   454, 0.1, 6, true,  false);
     this.animation = this.animations.idle;
     //this.boxAnimation =
     this.idle = true;
@@ -144,8 +148,15 @@ Snake.prototype.update = function() {
             this.idle ^= true;
             this.movingLeft = true;
             this.movingRight = false;
-            if (!this.inBox) this.animation = this.animations.runLeft;
-            if (this.inBox) this.animation = this.animations.boxRunLeft;
+            if (!this.inBox) {
+                this.animation = this.animations.runLeft;
+                this.y = this.animation.drawY;
+                console.log(this.y);
+            } else {
+                this.animation = this.animations.boxRunLeft;
+                this.y = this.animation.drawY;
+                console.log(this.y);
+            }
 
             //this.ground = 451;
         }
@@ -156,9 +167,14 @@ Snake.prototype.update = function() {
             this.idle ^= true;
             this.movingRight = true;
             this.movingLeft = false;
-            if (!this.inBox) this.animation = this.animations.runRight;
-            if (this.inBox) this.animation = this.animations.boxRunRight;
-            this.ground = 451;
+            if (!this.inBox) {
+                this.animation = this.animations.runRight;
+                this.y = this.animation.drawY;
+            } else {
+                this.animation = this.animations.boxRunRight;
+                this.y = this.animation.drawY;
+            }
+            //this.ground = 451;
         }
         this.moveRight();
         //Entity.prototype.draw.call(this, this.ground);
@@ -166,12 +182,20 @@ Snake.prototype.update = function() {
         if (!this.inBox) {
             //this.animation = this.animations.enterBox;
             this.inBox = true;
-            this.animation = this.animations.inBoxIdle;
+            this.animation = this.animations.enterBox;
+            if (this.animation.isDone()) this.animation = this.animations.inBoxIdle;
+            //if (this.animation.isDone()) {
+            //    this.animation = this.animations.inBoxIdle;
+            //} else {
+            //    this.animation = this.animations.enterBox;
+            //}
             //Entity.prototype.draw.call(this);
             //Entity.prototype.draw.call(this);
         } else {
             this.inBox = false;
-            this.animation = this.animations.idle;
+            this.animation = this.animations.exitBox;
+            if (this.animation.isDone()) this.animation = this.animations.idle;
+            //this.animation = this.animations.idle;
             //Entity.prototype.draw.call(this);
         }
 
@@ -179,9 +203,14 @@ Snake.prototype.update = function() {
         this.idle = true;
         this.movingLeft = false;
         this.movingRight = false;
-        this.ground = 448;
-        if (!this.inBox) this.animation = this.animations.idle;
-        if (this.inBox) this.animation = this.animations.inBoxIdle;
+
+        if (!this.inBox && this.animation !== this.animations.exitBox) {
+            this.animation = this.animations.idle;
+            this.y = this.animation.drawY;
+        } else if (this.inBox && this.animation !== this.animations.enterBox) {
+            this.animation = this.animations.inBoxIdle;
+            this.y = this.animation.drawY;
+        }
     }
 
 
@@ -225,11 +254,11 @@ Snake.prototype.draw = function(ctx) {
 
 Snake.prototype.moveLeft = function() {
 
-    this.x -= 2;
+    this.x -= 4;
 };
 
 Snake.prototype.moveRight = function() {
-    this.x += 2;
+    this.x += 4;
 };
 
 Snake.prototype.moveDown = function() {
