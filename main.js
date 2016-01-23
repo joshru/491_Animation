@@ -73,7 +73,7 @@ Background.prototype.draw = function (ctx) {
 };
 
 function Unicorn(game) {
-    this.animation = new Animation(ASSET_MANAGER.getAsset("./img/RobotUnicorn.png"), 0, 0, 206, 110, 0.02, 30, true, false);
+    this.animation = new Animation(ASSET_MANAGER.getAsset("./img/RobotUnicorn.png"),     0,   0,   206, 110, 0.02, 30, true, false);
     this.jumpAnimation = new Animation(ASSET_MANAGER.getAsset("./img/RobotUnicorn.png"), 618, 334, 174, 138, 0.02, 40, false, true);
     this.jumping = false;
     this.radius = 100;
@@ -117,20 +117,18 @@ function Snake(game) {
     this.game = game;
     //store all our animations in Snake so we don't have to make new ones all the time
     this.animations = {};
-    //                                                           sprite sheet path            X      Y     W     H     D    Dur  #  loop   reverse
-    this.animations.idle = new Animation(ASSET_MANAGER.getAsset("./img/snake.png"),           18,    81,   32,   52,   448, 0.1, 1, true,  false);
-    this.animations.runRight = new Animation(ASSET_MANAGER.getAsset("./img/snake.png"),       10,    143,  35.5, 49,   451, 0.1, 6, true,  false);
-    this.animations.runLeft = new Animation(ASSET_MANAGER.getAsset("./img/snake_rev.png"),    331.5, 143,  35.5, 49,   451, 0.1, 6, true,  true);
-    this.animations.enterBox = new Animation(ASSET_MANAGER.getAsset("./img/snake.png"),       66.9,  1761, 44.6,   66,   448, 0.1, 8, false, false);
-    this.animations.exitBox = new Animation(ASSET_MANAGER.getAsset("./img/snake.png"),        22,    1859, 42,   57,   448, 0.1, 6, false, false);
-    this.animations.inBoxIdle = new Animation(ASSET_MANAGER.getAsset("./img/snake.png"),      388,   1801, 41,   27.5, 473, 0.1, 1, true,  false);
-    this.animations.boxRunLeft = new Animation(ASSET_MANAGER.getAsset("./img/snake_rev.png"), 137,   1920, 42,   46,   454, 0.1, 6, true,  true);
-    this.animations.boxRunRight = new Animation(ASSET_MANAGER.getAsset("./img/snake.png"),    167,   1920, 42,   46,   454, 0.1, 6, true,  false);
+    //                                                           sprite sheet path            X      Y     W     H     D      Dur  #  loop   reverse
+    this.animations.idle = new Animation(ASSET_MANAGER.getAsset("./img/snake.png"),           18,    81,   32,   52,   448,   0.1, 1, true,  false);
+    this.animations.runRight = new Animation(ASSET_MANAGER.getAsset("./img/snake.png"),       10,    143,  35.5, 49,   451,   0.1, 6, true,  false);
+    this.animations.runLeft = new Animation(ASSET_MANAGER.getAsset("./img/snake_rev.png"),    331.5, 143,  35.5, 49,   451,   0.1, 6, true,  true);
+    this.animations.enterBox = new Animation(ASSET_MANAGER.getAsset("./img/snake.png"),       65.2,  1761, 46,   66,   433,   0.1, 8, false, false);
+    this.animations.exitBox = new Animation(ASSET_MANAGER.getAsset("./img/snake.png"),        25,    1859, 37,   56,   444.2, 0.1, 6, false, false);
+    this.animations.inBoxIdle = new Animation(ASSET_MANAGER.getAsset("./img/snake.png"),      388,   1801, 41,   27.5, 473,   0.1, 1, true,  false);
+    this.animations.boxRunLeft = new Animation(ASSET_MANAGER.getAsset("./img/snake_rev.png"), 137,   1920, 42,   46,   454,   0.1, 6, true,  true);
+    this.animations.boxRunRight = new Animation(ASSET_MANAGER.getAsset("./img/snake.png"),    167,   1920, 42,   46,   454,   0.1, 6, true,  false);
     this.animation = this.animations.idle;
     //this.boxAnimation =
     this.idle = true;
-    this.enteringBox = false;
-    this.exitingBox = false;
     this.inBox = false;
     this.movingLeft = false;
     this.movingRight = false;
@@ -142,7 +140,7 @@ Snake.prototype = new Entity();
 Snake.prototype.constructor = Snake;
 
 Snake.prototype.update = function() {
-    //console.log("idle: " + this.idle + " | move left: " + this.movingLeft + " | move right: " + this.movingRight + " | entering box: " + this.enteringBox + " | in box: " + this.inBox + " | exiting box: " + this.exitingBox);
+    //console.log("idle: " + this.idle + " | move left: " + this.movingLeft + " | move right: " + this.movingRight + " | in box: " + this.inBox + " | current animation: " + this.animation.startX + " | animation finished: " + this.animation.isDone());
     if (Key.isDown(Key.LEFT)) {
         if (!this.movingLeft) {
             this.idle = false;
@@ -155,8 +153,6 @@ Snake.prototype.update = function() {
                 this.animation = this.animations.boxRunLeft;
                 this.y = this.animation.drawY;
             }
-
-            //this.ground = 451;
         }
         this.moveLeft();
         Entity.prototype.draw.call(this);
@@ -172,41 +168,39 @@ Snake.prototype.update = function() {
                 this.animation = this.animations.boxRunRight;
                 this.y = this.animation.drawY;
             }
-            //this.ground = 451;
         }
         this.moveRight();
         //Entity.prototype.draw.call(this, this.ground);
     } else if (Key.isDown(Key.DOWN)) {
-        if (!this.inBox || this.animation === this.animations.enterBox) {
+        if (!this.inBox && this.animation !== this.animations.exitBox) {
             //this.animation = this.animations.enterBox;
-            this.inBox = true;
-            this.animation = this.animations.enterBox;
-            console.log("trying to enter box. in box = " + this.inBox);
-            if (this.animation.isDone()) {
+
+            if (this.animation !== this.animations.enterBox) {
+                this.inBox = true;
+                this.animation = this.animations.enterBox;
+                this.y = this.animation.drawY;
+                console.log("trying to enter box. in box = " + this.inBox);
+            } else if (this.animation === this.animations.enterBox && this.animation.isDone()) {
                 console.log("enter box animation finished");
                 this.animation.elapsedTime = 0;
                 this.animations.enterBox.elapsedTime = 0;
                 this.animation = this.animations.inBoxIdle;
+                this.y = this.animation.drawY;
             }
-            //if (this.animation.isDone()) {
-            //    this.animation = this.animations.inBoxIdle;
-            //} else {
-            //    this.animation = this.animations.enterBox;
-            //}
-            //Entity.prototype.draw.call(this);
-            //Entity.prototype.draw.call(this);
-        } else if (this.inBox || this.animation === this.animations.exitBox) {
-            this.inBox = false;
-            this.animation = this.animations.exitBox;
-            console.log("trying to exit box. in box = " + this.inBox);
-            if (this.animation.isDone()) {
+        } else if (this.inBox && this.animation !== this.animations.enterBox) {
+
+            if (this.animation !== this.animations.exitBox) {
+                this.inBox = false;
+                this.animation = this.animations.exitBox;
+                this.y = this.animation.drawY;
+                console.log("trying to exit box. in box = " + this.inBox);
+            } else if (this.animation === this.animations.exitBox && this.animation.isDone()) {
                 console.log("exit box animation finished");
                 this.animation.elapsedTime = 0;
                 this.animations.exitBox.elapsedTime = 0;
                 this.animation = this.animations.idle;
+                this.y = this.animation.drawY;
             }
-            //this.animation = this.animations.idle;
-            //Entity.prototype.draw.call(this);
         }
 
     } else {
@@ -214,44 +208,15 @@ Snake.prototype.update = function() {
         this.movingLeft = false;
         this.movingRight = false;
 
-        if (!this.inBox && this.animation !== this.animations.exitBox) {
+        if (!this.inBox) {
             this.animation = this.animations.idle;
             this.y = this.animation.drawY;
-        } else if (this.inBox && this.animation !== this.animations.enterBox) {
+        } else if (this.inBox) {
             this.animation = this.animations.inBoxIdle;
             this.y = this.animation.drawY;
         }
     }
 
-
-    //this.x += 1;
-
-    //if (this.game.space) {
-    //    this.box ^= true;
-    //    console.log(this.box);
-    //}
-    //if (this.box) {
-    //    if (this.boxAnimation.isDone()) {
-    //        this.boxAnimation.elapsedTime = 0;
-    //        this.box ^= true;
-    //    }
-    //    Entity.prototype.draw.call(this);
-    //}
-    //if (this.game.space) this.jumping = true;
-    //if (this.jumping) {
-    //    if (this.jumpAnimation.isDone()) {
-    //        this.jumpAnimation.elapsedTime = 0;
-    //        this.jumping = false;
-    //    }
-    //    var jumpDistance = this.jumpAnimation.elapsedTime / this.jumpAnimation.totalTime;
-    //    var totalHeight = 200;
-    //
-    //    if (jumpDistance > 0.5) {
-    //        jumpDistance = 1 - jumpDistance;
-    //    }
-    //    var height = totalHeight * (-4 * (jumpDistance * jumpDistance - jumpDistance));
-    //    this.y = this.ground - height;
-    //}
     Entity.prototype.draw.call(this);
 
 };
@@ -273,14 +238,10 @@ Snake.prototype.moveRight = function() {
 
 Snake.prototype.moveDown = function() {
     this.animation = this.animations.enterBox;
-    //this.ground -= 23;
 
 };
-//
-//Snake.prototype.moveLeft = function() {
-//    this.x -= 1;
-//};
 
+//swiped off stack overflow
 var Key = {
     _pressed: {},
 
